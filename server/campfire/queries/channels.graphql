@@ -1,0 +1,30 @@
+query ClubChannels_Query(
+  $first: Int!
+  $after: String
+  $clubId: ID!
+) {
+  club(id: $clubId) {
+    id
+    channels(first: $first, after: $after) {
+      edges {
+        node {
+          id
+          name
+          type
+          chatV2TopicId
+          unreadMentionsCount
+          userSettings {
+            isMuted
+          }
+          isReadOnly
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+

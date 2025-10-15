@@ -10,7 +10,9 @@ import (
 	"runtime/debug"
 	"syscall"
 
+	"github.com/topi314/campfire-auth/internal/xslog"
 	"github.com/topi314/campfire-auth/server"
+	"github.com/topi314/campfire-auth/server/web"
 )
 
 func main() {
@@ -61,7 +63,7 @@ func setupLogger(cfg server.LogConfig) {
 			ReplaceAttr: nil,
 		})
 	case server.LogFormatText:
-		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		handler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 			AddSource:   cfg.AddSource,
 			Level:       cfg.Level,
 			ReplaceAttr: nil,

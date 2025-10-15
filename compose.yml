@@ -1,0 +1,7 @@
+services:
+  campfire-auth:
+    build: .
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./config.toml:/var/lib/config.toml

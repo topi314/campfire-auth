@@ -16,15 +16,13 @@ import (
 )
 
 const (
-	publicEndpoint = "https://niantic-social-api.nianticlabs.com/public/graphql"
-	endpoint       = "https://niantic-social-api.nianticlabs.com/graphql"
+	endpoint = "https://niantic-social-api.nianticlabs.com/graphql"
 )
 
 var (
 	ErrTooManyRetries  = errors.New("too many retries, please try again later")
 	ErrTooManyRequests = errors.New("too many requests, please try again later")
 	ErrBadGateway      = errors.New("bad gateway, please try again later")
-	ErrEventNotFound   = errors.New("event not found")
 )
 
 type TokenFunc func(ctx context.Context) (string, error)

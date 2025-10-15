@@ -1,26 +1,26 @@
 package server
 
 import (
-	"bytes"
 	"context"
+	"database/sql"
 	"embed"
 	"errors"
 	"fmt"
 	"html/template"
 	"image"
-	"image/png"
 	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
-	"path"
 	"time"
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/rest"
 	"github.com/disgoorg/disgo/webhook"
 
+	"github.com/topi314/campfire-auth/internal/middlewares"
 	"github.com/topi314/campfire-auth/server/campfire"
+	"github.com/topi314/campfire-auth/server/database"
 )
 
 var (
@@ -81,11 +81,6 @@ func New(cfg Config) (*Server, error) {
 		slog.Info("Discord webhook notifications enabled", slog.String("name", wh.Name()), slog.String("guild_id", wh.GuildID.String()), slog.String("channel_id", wh.ChannelID.String()))
 	}
 
-	logoPNG, err := png.Decode(bytes.NewReader(logo))
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode logo: %w", err)
-	}
-
 	httpClient := &http.Client{}
 	s := &Server{
 		Cfg: cfg,
@@ -95,30 +90,36 @@ func New(cfg Config) (*Server, error) {
 		HttpClient:    httpClient,
 		Campfire:      campfire.New(cfg.Campfire, httpClient, getCampfireToken(db)),
 		DB:            db,
-		Auth:          auth.New(cfg.Auth),
 		Templates:     t,
 		StaticFS:      staticFS,
 		WebhookClient: webhookClient,
-		Logo:          logoPNG,
 	}
 
 	go s.cleanup()
+	go s.check()
 
 	return s, nil
 }
 
-func cleanPathMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Clean the request URL path
-		r.URL.Path = path.Clean(r.URL.Path)
-		next.ServeHTTP(w, r)
-	})
+func getCampfireToken(db *database.Database) func(ctx context.Context) (string, error) {
+	return func(ctx context.Context) (string, error) {
+		token, err := db.GetNextCampfireToken(ctx)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return "", errors.New("oooops, no valid token found. Please ping me on Discord with this error")
+			}
+			return "", fmt.Errorf("failed to get next campfire token: %w", err)
+		}
+
+		return token.Token, nil
+	}
 }
 
 type Server struct {
 	Cfg                    Config
 	Server                 *http.Server
 	HttpClient             *http.Client
+	DB                     *database.Database
 	Campfire               *campfire.Client
 	Templates              func() *template.Template
 	StaticFS               http.FileSystem
@@ -128,16 +129,12 @@ type Server struct {
 }
 
 func (s *Server) Start(handler http.Handler) {
-	s.Server.Handler = cleanPathMiddleware(handler)
+	s.Server.Handler = middlewares.CleanPath(handler)
 	go func() {
 		if err := s.Server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			fmt.Printf("Server failed: %s\n", err)
 		}
 	}()
-
-	go s.importClubs()
-	// go s.importEvents()
-	// go s.updateEvents()
 }
 
 func (s *Server) Stop() {

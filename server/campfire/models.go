@@ -79,7 +79,6 @@ type Member struct {
 	DisplayName string  `json:"displayName"`
 	AvatarURL   string  `json:"avatarUrl"`
 	Badges      []Badge `json:"badges"`
-	ClubRank    int     `json:"clubRank"`
 }
 
 type Badge struct {

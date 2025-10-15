@@ -10,6 +10,7 @@ import (
 
 	"github.com/topi314/campfire-auth/internal/xtime"
 	"github.com/topi314/campfire-auth/server/campfire"
+	"github.com/topi314/campfire-auth/server/database"
 )
 
 func LoadConfig(cfgPath string) (Config, error) {
@@ -37,7 +38,7 @@ func defaultConfig() Config {
 			AddSource: false,
 		},
 		Server: ServerConfig{
-			Addr: ":8085",
+			Addr: ":8086",
 		},
 		Campfire: campfire.Config{
 			Every:      xtime.Duration(1 * time.Second),
@@ -51,15 +52,17 @@ type Config struct {
 	Dev           bool                `toml:"dev"`
 	Log           LogConfig           `toml:"log"`
 	Server        ServerConfig        `toml:"server"`
+	Database      database.Config     `toml:"database"`
 	Campfire      campfire.Config     `toml:"campfire"`
 	Notifications NotificationsConfig `toml:"notifications"`
 }
 
 func (c Config) String() string {
-	return fmt.Sprintf("Dev: %t\nLog: %s\nServer: %s\nCampfire: %s\nNotifications: %s",
+	return fmt.Sprintf("Dev: %t\nLog: %s\nServer: %s\nDatabase: %s\nCampfire: %s\nNotifications: %s",
 		c.Dev,
 		c.Log,
 		c.Server,
+		c.Database,
 		c.Campfire,
 		c.Notifications,
 	)

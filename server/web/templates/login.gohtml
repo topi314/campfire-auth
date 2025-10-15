@@ -1,0 +1,36 @@
+{{ template "head" "Campfire Auth" }}
+<div class="container">
+    <div class="container-header">
+        <h1>Campfire Auth</h1>
+    </div>
+
+    <div id="login-code" class="section center">
+        <button hx-get="/login/code"
+                hx-target="#login-code"
+                hx-select="#login-code"
+                hx-swap="outerHTML"
+                hx-vals='{ "client_id": "{{ .ClientID }}", "redirect_uri": "{{ .RedirectURI }}" }'
+                class="button"
+                {{ if .Errs }}disabled{{ end }}
+        >
+            Login
+        </button>
+        {{ if .Errs }}
+            <div class="error">
+                <ul>
+                    {{ range .Errs }}
+                        <li>{{ . }}</li>
+                    {{ end }}
+                </ul>
+            </div>
+        {{ else }}
+
+        {{ end }}
+    </div>
+
+    <div class="section">
+        <p>To login, click the button above to generate a login code. Then, enter the code into the verification channel on your Campfire server.</p>
+        <p>You will be logged in automatically once the code is verified.</p>
+    </div>
+</div>
+{{ template "footer" }}

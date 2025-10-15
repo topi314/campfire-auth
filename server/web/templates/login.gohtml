@@ -9,7 +9,7 @@
                 hx-target="#login-code"
                 hx-select="#login-code"
                 hx-swap="outerHTML"
-                hx-vals='{ "client_id": "{{ .ClientID }}", "redirect_uri": "{{ .RedirectURI }}" }'
+                hx-vals='{ "client_id": "{{ .ClientID }}", "redirect_uri": "{{ .RedirectURI }}", "club_id": "{{ .ClubID }}", "channel_id": "{{ .ChannelID }}", "state": "{{ .State }}" }'
                 class="button"
                 {{ if .Errs }}disabled{{ end }}
         >

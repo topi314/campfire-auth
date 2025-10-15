@@ -281,7 +281,7 @@ form label {
     gap: 10px;
 }
 
-.table-4, .table-6 {
+.table-4, .table-5 {
     text-align: left;
     font-size: 16px;
     display: grid;
@@ -290,7 +290,6 @@ form label {
     overflow: auto;
     width: 100%;
 }
-
 
 .table-4 {
     grid-template-columns: auto 1fr auto auto;
@@ -314,28 +313,31 @@ form label {
     background-color: var(--background-color);
 }
 
-.table-6 {
-    grid-template-columns: auto 1fr auto auto auto auto;
+.table-5 {
+    grid-template-columns: auto 1fr auto auto auto;
 }
 
-.table-6 > * {
+.table-5 > * {
     padding: 5px;
     border-bottom: 1px solid var(--border-color);
 }
 
-.table-6 > *:last-child, .table-6 > *:nth-last-child(2), .table-6 > *:nth-last-child(3), .table-6 > *:nth-last-child(4), .table-6 > *:nth-last-child(5), .table-6 > *:nth-last-child(6) {
+.table-5 > *:last-child, .table-5 > *:nth-last-child(2), .table-5 > *:nth-last-child(3), .table-5 > *:nth-last-child(4), .table-5 > *:nth-last-child(5) {
     border-bottom: none;
 }
 
-.table-6 > *:nth-child(6n-1), .table-6 > *:nth-child(6n-2), .table-6 > *:nth-child(6n-3), .table-6 > *:nth-child(6n-4), .table-6 > *:nth-child(6n-5) {
+.table-5 > *:nth-child(5n-1), .table-5 > *:nth-child(5n-2), .table-5 > *:nth-child(5n-3), .table-5 > *:nth-child(5n-4) {
     border-right: 1px solid var(--border-color);
 }
 
-.table-6 > span:first-child, .table-6 > span:nth-child(2), .table-6 > span:nth-child(3), .table-6 > span:nth-child(4), .table-6 > span:nth-child(5), .table-6 > span:nth-child(6) {
+.table-5 > span:first-child, .table-5 > span:nth-child(2), .table-5 > span:nth-child(3), .table-5 > span:nth-child(4), .table-5 > span:nth-child(5) {
     font-weight: bold;
     background-color: var(--background-color);
 }
 
+.table-5 > *:nth-child(5n-4):not(:first-child) {
+    text-align: right;
+}
 
 .no-wrap {
     white-space: nowrap;

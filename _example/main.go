@@ -19,6 +19,8 @@ var (
 
 	clientID     = "jde623lp0o0p3pr2"
 	clientSecret = "9s0u6z1j5f28bscs"
+	clubID       = "b632fc8e-0b41-49de-ade2-21b0cd81db69"
+	channelID    = "aa67cc66-23fd-476b-a9e3-70782de95457"
 	redirectURI  = "http://localhost:8080/callback"
 	authURL      = "http://localhost:8086/login"
 	tokenURL     = "http://localhost:8086/api/exchange"
@@ -68,6 +70,10 @@ func (s *server) index(w http.ResponseWriter, r *http.Request) {
 	q := u.Query()
 	q.Set("client_id", clientID)
 	q.Set("redirect_uri", redirectURI)
+	q.Set("club_id", clubID)
+	q.Set("channel_id", channelID)
+	// In production, use a proper random state and validate it in the callback
+	q.Set("state", "some-random-state")
 	u.RawQuery = q.Encode()
 
 	if err = s.t.ExecuteTemplate(w, "index.gohtml", map[string]any{
@@ -82,8 +88,13 @@ func (s *server) callback(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 
 	code := query.Get("code")
+	state := query.Get("state")
 	if code == "" {
 		http.Error(w, "Missing code", http.StatusBadRequest)
+		return
+	}
+	if state != "some-random-state" {
+		http.Error(w, "Invalid state", http.StatusBadRequest)
 		return
 	}
 

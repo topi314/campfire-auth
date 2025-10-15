@@ -12,7 +12,7 @@ type Req struct {
 
 type Resp[T any] struct {
 	Errors []Error `json:"errors"`
-	Data   T       `json:"data"`
+	Data   *T      `json:"data"`
 }
 
 type Error struct {

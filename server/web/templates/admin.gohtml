@@ -43,19 +43,17 @@
         <div class="section-header">
             <h2>Clients</h2>
         </div>
-        <div class="table-6">
+        <div class="table-5">
+            <div>Name</div>
             <div>ID</div>
             <div>Secret</div>
-            <div>ClubID</div>
-            <div>ChannelID</div>
-            <div>RedirectURIs</div>
+            <div>Redirect URIs</div>
             <div>Created At</div>
 
             {{ range $client := .Clients }}
-                <span>{{ $client.ID }}</span>
+                <span class="no-wrap">{{ $client.Name }}</span>
+                <span class="wrap">{{ $client.ID }}</span>
                 <span class="wrap">{{ $client.Secret }}</span>
-                <span class="no-wrap">{{ $client.ClubID }}</span>
-                <span class="no-wrap">{{ $client.ChannelID }}</span>
                 <span class="wrap">{{ $client.RedirectURIs }}</span>
                 <span class="no-wrap">{{ formatTimeToRelDayTime $client.CreatedAt }}</span>
             {{ end }}
@@ -63,8 +61,8 @@
         <br/>
         <form method="POST" action="/admin/clients?password={{ .Password }}">
             <label class="form-control">
-                Channel Invite Link
-                <input type="text" name="invite" placeholder="Join Campfire! https://campfire.onelink.me/eBr8...">
+                Name
+                <input type="text" name="name" placeholder="My App">
             </label>
             <label class="form-control">
                 Redirect URIs (comma separated)

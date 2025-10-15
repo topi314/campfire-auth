@@ -23,6 +23,7 @@ var (
 	ErrTooManyRetries  = errors.New("too many retries, please try again later")
 	ErrTooManyRequests = errors.New("too many requests, please try again later")
 	ErrBadGateway      = errors.New("bad gateway, please try again later")
+	ErrNullData        = errors.New("response data is null")
 )
 
 type TokenFunc func(ctx context.Context) (string, error)
@@ -115,7 +116,11 @@ func (c *Client) do(ctx context.Context, token string, query string, vars map[st
 		slog.ErrorContext(ctx, "GraphQL errors", errs...)
 	}
 
-	if err = json.Unmarshal(resp.Data, rsBody); err != nil {
+	if resp.Data == nil {
+		return ErrNullData
+	}
+
+	if err = json.Unmarshal(*resp.Data, rsBody); err != nil {
 		return err
 	}
 

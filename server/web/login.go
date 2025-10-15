@@ -15,11 +15,15 @@ import (
 	"github.com/yeqown/go-qrcode/writer/standard"
 
 	"github.com/topi314/campfire-auth/internal/xrand"
+	"github.com/topi314/campfire-auth/server/database"
 )
 
 type LoginVars struct {
 	ClientID    string
 	RedirectURI string
+	ClubID      string
+	ChannelID   string
+	State       string
 	Errs        []string
 }
 
@@ -30,11 +34,23 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 	var errs []string
 	clientID := query.Get("client_id")
 	redirectURI := query.Get("redirect_uri")
+	clubID := query.Get("club_id")
+	channelID := query.Get("channel_id")
+	state := query.Get("state")
 	if clientID == "" {
 		errs = append(errs, "Missing client_id")
 	}
 	if redirectURI == "" {
 		errs = append(errs, "Missing redirect_uri")
+	}
+	if clubID == "" {
+		errs = append(errs, "Missing club_id")
+	}
+	if channelID == "" {
+		errs = append(errs, "Missing channel_id")
+	}
+	if state == "" {
+		errs = append(errs, "Missing state")
 	}
 
 	if clientID != "" {
@@ -56,6 +72,9 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 	if err := h.Templates().ExecuteTemplate(w, "login.gohtml", LoginVars{
 		ClientID:    clientID,
 		RedirectURI: redirectURI,
+		ClubID:      clubID,
+		ChannelID:   channelID,
+		State:       state,
 		Errs:        errs,
 	}); err != nil {
 		slog.ErrorContext(ctx, "Failed to render login template", slog.String("err", err.Error()))
@@ -74,6 +93,8 @@ func (h *handler) LoginCode(w http.ResponseWriter, r *http.Request) {
 
 	clientID := query.Get("client_id")
 	redirectURI := query.Get("redirect_uri")
+	clubID := query.Get("club_id")
+	channelID := query.Get("channel_id")
 	state := query.Get("state")
 	if clientID == "" {
 		http.Error(w, "Missing client_id", http.StatusBadRequest)
@@ -81,6 +102,14 @@ func (h *handler) LoginCode(w http.ResponseWriter, r *http.Request) {
 	}
 	if redirectURI == "" {
 		http.Error(w, "Missing redirect_uri", http.StatusBadRequest)
+		return
+	}
+	if clubID == "" {
+		http.Error(w, "Missing club_id", http.StatusBadRequest)
+		return
+	}
+	if channelID == "" {
+		http.Error(w, "Missing channel_id", http.StatusBadRequest)
 		return
 	}
 	if state == "" {
@@ -106,9 +135,23 @@ func (h *handler) LoginCode(w http.ResponseWriter, r *http.Request) {
 	code := xrand.RandCode()
 	checkCode := xrand.RandCode()
 	exchangeCode := xrand.RandCharCode()
-	slog.InfoContext(ctx, "Generated login code", slog.String("client_id", clientID), slog.String("code", code), slog.String("check_code", checkCode), slog.String("exchange_code", exchangeCode))
+	slog.InfoContext(ctx, "Generated login code",
+		slog.String("client_id", clientID),
+		slog.String("code", code),
+		slog.String("check_code", checkCode),
+		slog.String("exchange_code", exchangeCode),
+	)
 
-	if err = h.DB.InsertLogin(ctx, clientID, code, checkCode, exchangeCode, redirectURI, state); err != nil {
+	if err = h.DB.InsertLogin(ctx, database.Login{
+		ClientID:     clientID,
+		Code:         code,
+		CheckCode:    checkCode,
+		ExchangeCode: exchangeCode,
+		RedirectURI:  redirectURI,
+		ClubID:       clubID,
+		ChannelID:    channelID,
+		State:        state,
+	}); err != nil {
 		slog.ErrorContext(ctx, "Failed to insert login", slog.String("client_id", clientID), slog.String("code", code), slog.String("err", err.Error()))
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
@@ -117,7 +160,7 @@ func (h *handler) LoginCode(w http.ResponseWriter, r *http.Request) {
 	if err = h.Templates().ExecuteTemplate(w, "login_code.gohtml", LoginCodeVars{
 		Code:         code,
 		CheckCode:    checkCode,
-		CampfireLink: getChannelLink(client.ClubID, client.ChannelID),
+		CampfireLink: getChannelLink(clubID, channelID),
 	}); err != nil {
 		slog.ErrorContext(ctx, "Failed to render login code template", slog.String("err", err.Error()))
 	}
@@ -166,7 +209,7 @@ func (h *handler) LoginRe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link := getChannelLink(login.Client.ClubID, login.Client.ChannelID)
+	link := getChannelLink(login.ClubID, login.ChannelID)
 	http.Redirect(w, r, link, http.StatusFound)
 }
 
@@ -196,7 +239,7 @@ func (h *handler) LoginCheck(w http.ResponseWriter, r *http.Request) {
 		if err = h.Templates().ExecuteTemplate(w, "login_code.gohtml", LoginCodeVars{
 			Code:         login.Code,
 			CheckCode:    login.CheckCode,
-			CampfireLink: getChannelLink(login.Client.ClubID, login.Client.ChannelID),
+			CampfireLink: getChannelLink(login.ClubID, login.ChannelID),
 		}); err != nil {
 			slog.ErrorContext(ctx, "Failed to render login code template", slog.String("err", err.Error()))
 		}

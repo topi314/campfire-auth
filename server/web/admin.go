@@ -7,16 +7,12 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/topi314/campfire-auth/internal/xrand"
-	"github.com/topi314/campfire-auth/server/campfire"
 	"github.com/topi314/campfire-auth/server/database"
 )
-
-var campfireInviteRegex = regexp.MustCompile(`https://campfire\.onelink\.me/[a-zA-Z0-9]+(?:\?[^ ]*)?`)
 
 type AdminVars struct {
 	Tokens       []Token
@@ -44,20 +40,18 @@ type Token struct {
 
 func newClient(client database.Client) Client {
 	return Client{
+		Name:         client.Name,
 		ID:           client.ID,
 		Secret:       client.Secret,
-		ClubID:       client.ClubID,
-		ChannelID:    client.ChannelID,
 		RedirectURIs: strings.Join(client.RedirectURIs.V, ", "),
 		CreatedAt:    client.CreatedAt,
 	}
 }
 
 type Client struct {
+	Name         string
 	ID           string
 	Secret       string
-	ClubID       string
-	ChannelID    string
 	RedirectURIs string
 	CreatedAt    time.Time
 }
@@ -138,30 +132,14 @@ func (h *handler) AdminClients(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	invite := r.FormValue("invite")
+	name := r.FormValue("name")
 	redirectURIs := r.FormValue("redirect_uris")
-	if invite == "" {
-		h.renderAdmin(w, r, nil, []string{"Invite link cannot be empty"})
+	if name == "" {
+		h.renderAdmin(w, r, nil, []string{"Name cannot be empty"})
 		return
 	}
 	if redirectURIs == "" {
 		h.renderAdmin(w, r, nil, []string{"Redirect URIs cannot be empty"})
-		return
-	}
-
-	var inviteURL string
-	match := campfireInviteRegex.FindStringSubmatch(invite)
-	if len(match) > 0 {
-		inviteURL = match[0]
-	}
-	if inviteURL == "" {
-		h.renderAdmin(w, r, nil, []string{"No valid Campfire invite link found"})
-		return
-	}
-
-	clubID, channelID, err := campfire.ResolveClubAndChannelID(inviteURL)
-	if err != nil {
-		h.renderAdmin(w, r, nil, []string{"Failed to resolve club and channel ID: " + err.Error()})
 		return
 	}
 
@@ -176,7 +154,7 @@ func (h *handler) AdminClients(w http.ResponseWriter, r *http.Request) {
 	clientID := xrand.RandCharCode()
 	clientSecret := xrand.RandCharCode()
 
-	if err = h.DB.InsertClient(ctx, clientID, clientSecret, clubID, channelID, redirects); err != nil {
+	if err := h.DB.InsertClient(ctx, name, clientID, clientSecret, redirects); err != nil {
 		h.renderAdmin(w, r, nil, []string{"Failed to insert client: " + err.Error()})
 		return
 	}

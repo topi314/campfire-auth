@@ -9,20 +9,20 @@ import (
 
 type Client struct {
 	ID           string                 `db:"client_id"`
+	Name         string                 `db:"client_name"`
 	Secret       string                 `db:"client_secret"`
-	ClubID       string                 `db:"client_club_id"`
-	ChannelID    string                 `db:"client_channel_id"`
 	RedirectURIs xpgtype.JSON[[]string] `db:"client_redirect_uris"`
 	CreatedAt    time.Time              `db:"client_created_at"`
 }
 
-func (d *Database) InsertClient(ctx context.Context, clientID string, clientSecret string, clubID string, channelID string, redirectURIs []string) error {
+func (d *Database) InsertClient(ctx context.Context, name string, clientID string, clientSecret string, redirectURIs []string) error {
 	query := `
-		INSERT INTO clients (client_id, client_secret, client_club_id, client_channel_id, client_redirect_uris)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO clients (name, client_id, client_secret, client_redirect_uris)
+		VALUES ($1, $2, $3, $4)
 	`
 
-	_, err := d.db.ExecContext(ctx, query, clientID, clientSecret, clubID, channelID, xpgtype.JSON[[]string]{V: redirectURIs})
+	_, err := d.db.ExecContext(ctx, query, name, clientID, clientSecret, xpgtype.JSON[[]string]{V: redirectURIs})
+
 	return err
 }
 

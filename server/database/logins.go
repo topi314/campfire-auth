@@ -14,6 +14,8 @@ type Login struct {
 	CheckCode    string           `db:"login_check_code"`
 	ExchangeCode string           `db:"login_exchange_code"`
 	RedirectURI  string           `db:"login_redirect_uri"`
+	ClubID       string           `db:"login_club_id"`
+	ChannelID    string           `db:"login_channel_id"`
 	State        string           `db:"login_state"`
 	User         *json.RawMessage `db:"login_user"`
 	CreatedAt    time.Time        `db:"login_created_at"`
@@ -25,28 +27,27 @@ type LoginWithClient struct {
 	Client
 }
 
-func (d *Database) InsertLogin(ctx context.Context, clientID, code string, checkCode string, exchangeCode string, redirectURI string, state string) error {
+func (d *Database) InsertLogin(ctx context.Context, login Login) error {
 	query := `
-		INSERT INTO logins (login_client_id, login_code, login_check_code, login_exchange_code, login_redirect_uri, login_state)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO logins (login_client_id, login_code, login_check_code, login_exchange_code, login_redirect_uri, login_club_id, login_channel_id, login_state)
+		VALUES (:login_client_id, :login_code, :login_check_code, :login_exchange_code, :login_redirect_uri, :login_club_id, :login_channel_id, :login_state)
 	`
 
-	if _, err := d.db.ExecContext(ctx, query, clientID, code, checkCode, exchangeCode, redirectURI, state); err != nil {
+	if _, err := d.db.NamedExecContext(ctx, query, login); err != nil {
 		return fmt.Errorf("failed to insert login: %w", err)
 	}
 
 	return nil
 }
 
-func (d *Database) GetLoginByCheckCode(ctx context.Context, checkCode string) (*LoginWithClient, error) {
+func (d *Database) GetLoginByCheckCode(ctx context.Context, checkCode string) (*Login, error) {
 	query := `
-		SELECT logins.*, clients.*
+		SELECT *
 		FROM logins
-		JOIN clients ON logins.login_client_id = clients.client_id
 		WHERE logins.login_check_code = $1
 	`
 
-	var login LoginWithClient
+	var login Login
 	if err := d.db.GetContext(ctx, &login, query, checkCode); err != nil {
 		return nil, fmt.Errorf("failed to get login by check code: %w", err)
 	}
@@ -54,15 +55,14 @@ func (d *Database) GetLoginByCheckCode(ctx context.Context, checkCode string) (*
 	return &login, nil
 }
 
-func (d *Database) GetLoginByCode(ctx context.Context, code string) (*LoginWithClient, error) {
+func (d *Database) GetLoginByCode(ctx context.Context, code string) (*Login, error) {
 	query := `
-		SELECT logins.*, clients.*
+		SELECT *
 		FROM logins
-		JOIN clients ON logins.login_client_id = clients.client_id
 		WHERE logins.login_code = $1
 	`
 
-	var login LoginWithClient
+	var login Login
 	if err := d.db.GetContext(ctx, &login, query, code); err != nil {
 		return nil, fmt.Errorf("failed to get login by code: %w", err)
 	}
@@ -112,17 +112,16 @@ func (d *Database) DeleteLoginByClientIDSecretExchangeCode(ctx context.Context, 
 	return &login, nil
 }
 
-// GetNextLogins retrieves all logins from the next client that needs to be checked.
-func (d *Database) GetNextLogins(ctx context.Context) ([]LoginWithClient, error) {
+// GetNextLogins retrieves all logins which have the same channel id and haven't been checked in a whlile.
+func (d *Database) GetNextLogins(ctx context.Context) ([]Login, error) {
 	query := `
-		SELECT logins.*, clients.*
+		SELECT *
 		FROM logins
-		JOIN clients ON logins.login_client_id = clients.client_id
-		WHERE logins.login_user IS NULL
-		ORDER BY logins.login_updated_at ASC
+		WHERE login_user IS NULL
+		ORDER BY login_updated_at ASC
 	`
 
-	var logins []LoginWithClient
+	var logins []Login
 	if err := d.db.SelectContext(ctx, &logins, query); err != nil {
 		return nil, fmt.Errorf("failed to get next logins: %w", err)
 	}
@@ -147,7 +146,7 @@ func (d *Database) UpdateLoginsLastUpdatedAt(ctx context.Context, ids []int) err
 func (d *Database) DeleteExpiredLogins(ctx context.Context) error {
 	query := `
 		DELETE FROM logins
-		WHERE login_created_at < now() - INTERVAL '120 seconds'
+		WHERE login_created_at < now() - INTERVAL '240 seconds'
 	`
 
 	if _, err := d.db.ExecContext(ctx, query); err != nil {

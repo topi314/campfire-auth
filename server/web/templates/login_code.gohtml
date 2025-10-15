@@ -6,13 +6,19 @@
         <div id="login-code"
              class="section center"
              hx-get="/login/check"
-             hx-trigger="load delay:1s"
+             hx-trigger="load delay:2s"
              hx-select="#login-code"
              hx-swap="outerHTML"
              hx-vals='{"check_code": "{{ .CheckCode }}"}'
         >
             <div>Code: <code>{{ .Code }}</code></div>
-            <a href="{{ .CampfireLink }}" target="_blank" class="button">Open Channel</a>
+            <div>
+                <a href="{{ .CampfireLink }}" target="_blank" class="button">Open Channel</a>
+            </div>
+            <br/>
+            <div>
+                <img class="qr-code" src="/login/code/{{ .Code }}" alt="QR Code">
+            </div>
         </div>
 
         <div class="section">

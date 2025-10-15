@@ -1,0 +1,111 @@
+{{ template "head" "Campfire Auth Docs" }}
+<div class="container">
+    <div class="container-header">
+        <h1>API Documentation</h1>
+    </div>
+
+    <div class="section">
+        <h2>Base URL</h2>
+        <p>The base URL for all API endpoints is: <code>{{ .BaseURL }}/api</code></p>
+    </div>
+
+    <div class="section">
+        <h2>How it works</h2>
+        <p>This API allows third-party applications to verify and retrieve Campfire user information using an OAuth-like flow.</p>
+        <p>To authenticate, the application must first redirect the user to <code>{{ .BaseURL }}/login</code> to obtain a temporary code.</p>
+        <p>
+            This endpoint requires three query parameters:
+        </p>
+        <ul>
+            <li><strong><code>client_id</code></strong>: The client ID provided during application registration</li>
+            <li><strong><code>redirect_uri</code></strong>: The URI to redirect the user to after verification (must match the registered redirect URI)</li>
+            <li><strong><code>state</code></strong>: A random string to prevent CSRF attacks (will be returned as-is in the redirect)</li>
+        </ul>
+        <br/>
+        <p>The user is then prompted to enter this code in the verification channel on their Campfire server.</p>
+        <p>Once the code has been received, the user is redirected back to the application with the code as a query parameter.</p>
+        <p>The application can then exchange this code for the Campfire user object by making a POST request to the <a href="#code-exchange">Code Exchange</a> endpoint.</p>
+        <p>Subsequent requests to the API can be made using the user's ID to retrieve user information or search for users by username.</p>
+        <p>All endpoints require basic authentication using the client id and secret.</p>
+    </div>
+
+    <div class="section">
+        <h2>Endpoints</h2>
+        <ul>
+            <li><a href="#code-exchange">Code Exchange</a> - Exchange a code for the campfire user object</li>
+            <li><a href="#get-user">Get User</a> - Get a user object by ID</li>
+            <li><a href="#search-users">Search Users</a> - Search for users by username</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2 id="code-exchange">Code Exchange</h2>
+        <p>
+            <strong><code>POST</code></strong> <code>/api/exchange</code>
+        </p>
+        <p>Query Parameters:</p>
+        <ul>
+            <li><strong><code>code</code></strong>: The temporary code obtained from the /login endpoint</li>
+        </ul>
+        <p>Example Request:</p>
+        <pre><code>POST {{ .BaseURL }}/api/exchange?code=YOUR_CODE_HERE</code></pre>
+        <p>Response:</p>
+        <p>Returns a JSON object with the following structure:</p>
+        <pre><code>{
+  "id": "E:3I7ZXKS4BN252MFQQ6GX7ROZOPJNA3RITFEIPUZGJ324ESDJ2RVA",
+  "username": "topi314",
+  "displayName": "topi",
+  "avatarUrl": "https://niantic-social-api.nianticlabs.com/images/d56f9d1dd0df4dcb",
+  "badges": [
+    {
+      "badgeType": "PGO_COMMUNITY_AMBASSADOR",
+      "alias": "PGO_COMMUNITY_AMBASSADOR"
+    }
+  ],
+  "gameProfiles": [
+    {
+      "id": "PGO-TEAM_YELLOW-PokeTrainerTopi",
+      "game": "PGO",
+      "codename": "PokeTrainerTopi",
+      "displayName": "",
+      "level": 50,
+      "faction": "Team Instinct",
+      "factionColor": "#FF9900",
+      "visibility": "EVERYONE",
+      "lastPlayedTimestampMs": 1760486400000
+    }
+  ]
+}</code></pre>
+    </div>
+
+    <div class="section">
+        <h2 id="get-user">Get User</h2>
+        <p>
+            <strong><code>GET</code></strong> <code>/api/users/{id}</code>
+        </p>
+        <p>Path Parameters:</p>
+        <ul>
+            <li><strong><code>id</code></strong>: The ID of the user to retrieve</li>
+        </ul>
+        <p>Example Request:</p>
+        <pre><code>GET {{ .BaseURL }}/api/users/E:3I7ZXKS4BN252MFQQ6GX7ROZOPJNA3RITFEIPUZGJ324ESDJ2RVA</code></pre>
+        <p>Response:</p>
+        <p>Returns a JSON object with the same structure as the Code Exchange response.</p>
+    </div>
+
+    <div class="section">
+        <h2 id="search-users">Search Users</h2>
+        <p>
+            <strong><code>GET</code></strong> <code>/api/users?username={username}</code>
+        </p>
+        <p>Query Parameters:</p>
+        <ul>
+            <li><strong><code>username</code></strong>: The username to search for (case-insensitive, partial matches allowed)</li>
+        </ul>
+        <p>Example Request:</p>
+        <pre><code>GET {{ .BaseURL }}/api/users?username=topi</code></pre>
+        <p>Response:</p>
+        <p>Returns a JSON array of user objects matching the search criteria, each with the same structure as the Code Exchange response.</p>
+    </div>
+</div>
+{{ template "footer" }}

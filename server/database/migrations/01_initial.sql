@@ -24,6 +24,7 @@ CREATE TABLE logins
     login_check_code    VARCHAR   NOT NULL UNIQUE,
     login_exchange_code VARCHAR   NOT NULL UNIQUE,
     login_redirect_uri  VARCHAR   NOT NULL,
+    login_state         VARCHAR   NOT NULL,
     login_user          JSONB,
     login_created_at    TIMESTAMP NOT NULL DEFAULT now(),
     login_updated_at    TIMESTAMP NOT NULL DEFAULT now()

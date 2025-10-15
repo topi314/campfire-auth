@@ -36,52 +36,53 @@ func (e Error) Error() string {
 	return msg
 }
 
-type Pagination[T any] struct {
-	TotalCount int       `json:"totalCount"`
-	Edges      []Edge[T] `json:"edges"`
-	PageInfo   PageInfo  `json:"pageInfo"`
+type historyResp struct {
+	MessagesFromHistoryV2 MessageHistory `json:"messagesFromHistoryV2"`
 }
 
-type Edge[T any] struct {
-	Node   T      `json:"node"`
-	Cursor string `json:"cursor"`
+type MessageHistory struct {
+	Messages []struct {
+		Message struct {
+			Id     string `json:"id"`
+			Sender struct {
+				User User `json:"user"`
+			} `json:"sender"`
+			SentAt  string `json:"sentAt"`
+			Content string `json:"content"`
+		} `json:"message"`
+	} `json:"messages"`
 }
 
-type PageInfo struct {
-	HasNextPage bool   `json:"hasNextPage"`
-	StartCursor string `json:"startCursor"`
-	EndCursor   string `json:"endCursor"`
-}
-type clubResp struct {
-	Club Club `json:"club"`
-}
-
-type Club struct {
-	ID       string              `json:"id"`
-	Channels Pagination[Channel] `json:"channels"`
-}
-
-type Channel struct {
-	ID                  string `json:"id"`
-	Name                string `json:"name"`
-	Type                string `json:"type"`
-	ChatV2TopicId       string `json:"chatV2TopicId"`
-	UnreadMentionsCount int    `json:"unreadMentionsCount"`
-	UserSettings        struct {
-		IsMuted bool `json:"isMuted"`
-	}
-	IsReadyOnly bool `json:"isReadyOnly"`
-}
-
-type Member struct {
-	ID          string  `json:"id"`
-	Username    string  `json:"username"`
-	DisplayName string  `json:"displayName"`
-	AvatarURL   string  `json:"avatarUrl"`
-	Badges      []Badge `json:"badges"`
+type User struct {
+	ID           string        `json:"id"`
+	Username     string        `json:"username"`
+	DisplayName  string        `json:"displayName"`
+	AvatarURL    string        `json:"avatarUrl"`
+	Badges       []Badge       `json:"badges"`
+	GameProfiles []GameProfile `json:"gameProfiles"`
 }
 
 type Badge struct {
 	Alias     string `json:"alias"`
 	BadgeType string `json:"badgeType"`
+}
+
+type GameProfile struct {
+	ID                    string `json:"id"`
+	Game                  string `json:"game"`
+	Codename              string `json:"codename"`
+	DisplayName           string `json:"displayName"`
+	Level                 int    `json:"level"`
+	Faction               string `json:"faction"`
+	FactionColor          string `json:"factionColor"`
+	Visibility            string `json:"visibility"`
+	LastPlayedTimestampMs int64  `json:"lastPlayedTimestampMs"`
+}
+
+type usersResp struct {
+	Users []User `json:"users"`
+}
+
+type userByIDResp struct {
+	User User `json:"userById"`
 }

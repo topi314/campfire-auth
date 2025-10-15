@@ -1,0 +1,36 @@
+query fetchMessagesFromChatv2_Query(
+  $input: MessagesFromHistoryV2Input!
+) {
+  messagesFromHistoryV2(input: $input) {
+    messages {
+      message {
+        id
+        sender {
+          user {
+            id
+            username
+            displayName
+            avatarUrl
+            badges {
+              badgeType
+              alias
+            }
+            gameProfiles {
+              id
+              game
+              codename
+              displayName
+              level
+              faction
+              factionColor
+              visibility
+              lastPlayedTimestampMs
+            }
+          }
+        }
+        sentAt
+        content
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"embed"
@@ -8,6 +9,7 @@ import (
 	"fmt"
 	"html/template"
 	"image"
+	"image/png"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -29,6 +31,9 @@ var (
 
 	//go:embed web/templates/*.gohtml
 	templates embed.FS
+
+	//go:embed web/static/campfire-auth-mini.png
+	logo []byte
 )
 
 func New(cfg Config) (*Server, error) {
@@ -81,6 +86,11 @@ func New(cfg Config) (*Server, error) {
 		slog.Info("Discord webhook notifications enabled", slog.String("name", wh.Name()), slog.String("guild_id", wh.GuildID.String()), slog.String("channel_id", wh.ChannelID.String()))
 	}
 
+	logoPNG, err := png.Decode(bytes.NewReader(logo))
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode logo: %w", err)
+	}
+
 	httpClient := &http.Client{}
 	s := &Server{
 		Cfg: cfg,
@@ -93,10 +103,12 @@ func New(cfg Config) (*Server, error) {
 		Templates:     t,
 		StaticFS:      staticFS,
 		WebhookClient: webhookClient,
+		Logo:          logoPNG,
 	}
 
 	go s.cleanup()
-	go s.check()
+	go s.loginCodeChecker()
+	go s.loginCodeCleaner()
 
 	return s, nil
 }

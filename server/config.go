@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -90,12 +91,16 @@ func (c LogConfig) String() string {
 }
 
 type ServerConfig struct {
-	Addr string `toml:"addr"`
+	Addr          string `toml:"addr"`
+	AdminPassword string `toml:"admin_password"`
+	PublicURL     string `toml:"public_url"`
 }
 
 func (c ServerConfig) String() string {
-	return fmt.Sprintf("\n Address: %s",
+	return fmt.Sprintf("\n Address: %s\n AdminPassword: %s\n PublicURL: %s",
 		c.Addr,
+		strings.Repeat("*", len(c.AdminPassword)),
+		c.PublicURL,
 	)
 }
 

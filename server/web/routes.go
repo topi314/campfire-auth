@@ -24,11 +24,19 @@ func Routes(srv *server.Server) http.Handler {
 
 	mux.HandleFunc("GET /admin", h.Admin)
 	mux.HandleFunc("POST /admin/tokens", h.AdminTokens)
+	mux.HandleFunc("POST /admin/clients", h.AdminClients)
 
 	mux.HandleFunc("GET /login", h.Login)
 	mux.HandleFunc("GET /login/code", h.LoginCode)
+	mux.Handle("GET /login/code/{code}", middlewares.Cache(http.HandlerFunc(h.LoginQRCode)))
+	mux.HandleFunc("GET /login/re/{code}", h.LoginRe)
 	mux.HandleFunc("GET /login/check", h.LoginCheck)
+
 	mux.HandleFunc("GET /api/exchange", h.ExchangeCode)
+	mux.HandleFunc("GET /api/users/search", h.SearchUser)
+	mux.HandleFunc("GET /api/users/{user_id}", h.GetUser)
+
+	mux.HandleFunc("GET /api/docs", h.APIDocs)
 
 	mux.Handle("GET  /static/", fs)
 	mux.Handle("HEAD /static/", fs)

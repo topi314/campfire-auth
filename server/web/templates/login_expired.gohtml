@@ -1,0 +1,24 @@
+{{ template "head" "Campfire Auth" }}
+<div class="container">
+    <div class="container-header">
+        <h1>Campfire Auth</h1>
+
+        <div id="login-code">
+            <div class="error">
+                <ul>
+                    <li>Login session has expired. Please try again.</li>
+                </ul>
+            </div>
+            <br/>
+            <button onclick="window.location.reload();" class="button">
+                Try Again
+            </button>
+        </div>
+
+        <div class="section">
+            <p>To login, click the button above to generate a login code. Then, enter the code into the verification channel on your Campfire server.</p>
+            <p>You will be logged in automatically once the code is verified.</p>
+        </div>
+    </div>
+</div>
+{{ template "footer" }}

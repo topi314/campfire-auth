@@ -1,0 +1,85 @@
+{{ template "head" "Admin" }}
+<div class="container">
+    <div class="container-header">
+        <h1>Admin</h1>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <h2>Tokens</h2>
+        </div>
+        <div class="table-4">
+            <div>ID</div>
+            <div>Expires At</div>
+            <div>Email</div>
+            <div>Token</div>
+
+            {{ range $token := .Tokens }}
+                <span>{{ $token.ID }}</span>
+                <span class="no-wrap">{{ formatTimeToRelDayTime $token.ExpiresAt }}</span>
+                <span class="no-wrap">{{ $token.Email }}</span>
+                <span class="wrap">{{ $token.Token }}</span>
+            {{ end }}
+        </div>
+        <br/>
+        <form method="POST" action="/admin/tokens?password={{ .Password }}">
+            <label class="form-control">
+                Token
+                <input type="text" name="token" placeholder="ey...">
+            </label>
+            {{ if .TokenErrors }}
+                <p id="error-message" class="error">
+                    {{ range $error := .TokenErrors }}
+                        {{ $error }}
+                        <br/>
+                    {{ end }}
+                </p>
+            {{ end }}
+            <button type="submit">Add</button>
+        </form>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <h2>Clients</h2>
+        </div>
+        <div class="table-6">
+            <div>ID</div>
+            <div>Secret</div>
+            <div>ClubID</div>
+            <div>ChannelID</div>
+            <div>RedirectURIs</div>
+            <div>Created At</div>
+
+            {{ range $client := .Clients }}
+                <span>{{ $client.ID }}</span>
+                <span class="wrap">{{ $client.Secret }}</span>
+                <span class="no-wrap">{{ $client.ClubID }}</span>
+                <span class="no-wrap">{{ $client.ChannelID }}</span>
+                <span class="wrap">{{ $client.RedirectURIs }}</span>
+                <span class="no-wrap">{{ formatTimeToRelDayTime $client.CreatedAt }}</span>
+            {{ end }}
+        </div>
+        <br/>
+        <form method="POST" action="/admin/clients?password={{ .Password }}">
+            <label class="form-control">
+                Channel Invite Link
+                <input type="text" name="invite" placeholder="Join Campfire! https://campfire.onelink.me/eBr8...">
+            </label>
+            <label class="form-control">
+                Redirect URIs (comma separated)
+                <input type="text" name="redirect_uris" placeholder="https://example.com/callback, myapp://callback">
+            </label>
+            {{ if .ClientErrors }}
+                <p id="error-message" class="error">
+                    {{ range $error := .ClientErrors }}
+                        {{ $error }}
+                        <br/>
+                    {{ end }}
+                </p>
+            {{ end }}
+            <button type="submit">Add</button>
+        </form>
+    </div>
+</div>
+{{ template "footer" }}

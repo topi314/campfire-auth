@@ -87,6 +87,14 @@ button:disabled, .button:disabled {
     cursor: not-allowed;
 }
 
+button.success, .button.success {
+    background-color: var(--success-color);
+}
+
+button.danger, .button.danger {
+    background-color: var(--error-color);
+}
+
 select {
     overflow-y: auto;
     background-color: var(--background2-color);
@@ -362,4 +370,10 @@ form label {
     font-size: 1.5em;
     font-weight: bold;
     letter-spacing: 0.1em;
+}
+
+.icon {
+    width: 10em;
+    height: 10em;
+    border-radius: 1.5em;
 }

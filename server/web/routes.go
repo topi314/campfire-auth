@@ -17,7 +17,7 @@ func Routes(srv *server.Server) http.Handler {
 		Server: srv,
 	}
 
-	fs := middlewares.Cache(http.FileServer(h.StaticFS))
+	fileserver := srv.Reloader.CacheMiddleware(http.FileServer(srv.StaticFS))
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", h.Index)
@@ -38,8 +38,11 @@ func Routes(srv *server.Server) http.Handler {
 
 	mux.HandleFunc("GET /api/docs", h.APIDocs)
 
-	mux.Handle("GET  /static/", fs)
-	mux.Handle("HEAD /static/", fs)
+	mux.Handle("/static/", fileserver)
+
+	if srv.Cfg.Dev {
+		mux.Handle(server.ReloadRoute, srv.Reloader.Handler())
+	}
 
 	mux.HandleFunc("/", h.NotFound)
 

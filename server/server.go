@@ -19,11 +19,14 @@ import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/rest"
 	"github.com/disgoorg/disgo/webhook"
+	"github.com/topi314/goreload"
 
 	"github.com/topi314/campfire-auth/internal/middlewares"
 	"github.com/topi314/campfire-auth/server/campfire"
 	"github.com/topi314/campfire-auth/server/database"
 )
+
+const ReloadRoute = "/dev/reload"
 
 var (
 	//go:embed web/static
@@ -37,8 +40,18 @@ var (
 )
 
 func New(cfg Config) (*Server, error) {
-	var staticFS http.FileSystem
-	var t func() *template.Template
+	reloader := goreload.New(goreload.Config{
+		Logger:  slog.Default(),
+		Route:   ReloadRoute,
+		Enabled: cfg.Dev,
+		MaxAge:  time.Hour,
+	})
+
+	var (
+		staticFS http.FileSystem
+		t        func() *template.Template
+	)
+
 	if cfg.Dev {
 		root, err := os.OpenRoot("server/web/")
 		if err != nil {
@@ -46,10 +59,12 @@ func New(cfg Config) (*Server, error) {
 		}
 		staticFS = http.FS(root.FS())
 		t = func() *template.Template {
-			return template.Must(template.New("templates").
+			return reloader.MustParseTemplate(template.Must(template.New("templates").
 				Funcs(templateFuncs).
-				ParseFS(root.FS(), "templates/*.gohtml"))
+				ParseFS(root.FS(), "templates/*.gohtml"),
+			))
 		}
+		reloader.Start(root.FS())
 	} else {
 		subStaticFS, err := fs.Sub(static, "web")
 		if err != nil {
@@ -57,10 +72,10 @@ func New(cfg Config) (*Server, error) {
 		}
 		staticFS = http.FS(subStaticFS)
 
-		st := template.Must(template.New("templates").
+		st := reloader.MustParseTemplate(template.Must(template.New("templates").
 			Funcs(templateFuncs).
 			ParseFS(templates, "web/templates/*.gohtml"),
-		)
+		))
 
 		t = func() *template.Template {
 			return st
@@ -104,6 +119,7 @@ func New(cfg Config) (*Server, error) {
 		StaticFS:      staticFS,
 		WebhookClient: webhookClient,
 		Logo:          logoPNG,
+		Reloader:      reloader,
 	}
 
 	go s.cleanup()
@@ -138,6 +154,7 @@ type Server struct {
 	WebhookClient          *webhook.Client
 	SentTokenNotifications []int
 	Logo                   image.Image
+	Reloader               *goreload.Reloader
 }
 
 func (s *Server) Start(handler http.Handler) {
@@ -150,6 +167,8 @@ func (s *Server) Start(handler http.Handler) {
 }
 
 func (s *Server) Stop() {
+	s.Reloader.Close()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

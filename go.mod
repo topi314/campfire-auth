@@ -8,6 +8,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/topi314/gomigrate v0.0.0-20250604001904-f3f6e21ecfc9
+	github.com/topi314/goreload v0.0.0-20251020232344-560d00e2bb71
 	github.com/yeqown/go-qrcode/v2 v2.2.5
 	github.com/yeqown/go-qrcode/writer/standard v1.3.0
 	golang.org/x/time v0.14.0

@@ -1,0 +1,22 @@
+{{ template "head" "Campfire Auth" }}
+<div class="container">
+    <div class="container-header">
+        <h1>Campfire Auth</h1>
+
+        <div id="login-code"
+             class="section center"
+        >
+            <img src="{{ .User.AvatarURL }}" class="icon"/>
+            <div>{{ .User.DisplayName }}</div>
+            <code title="{{ .User.ID }}">@{{ .User.Username }}</code>
+            <p>Is this you?</p>
+            <div class="buttons">
+                <a href="{{ .RedirectURI }}" class="button success">Yes</a>
+                <button onclick="window.location.reload();" class="button danger">
+                    No
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{{ template "footer" }}

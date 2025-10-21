@@ -1,8 +1,10 @@
 package web
 
 import (
+	"cmp"
 	"database/sql"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -213,6 +215,18 @@ func (h *handler) LoginRe(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, link, http.StatusFound)
 }
 
+type LoginCheckVars struct {
+	User        User
+	RedirectURI string
+}
+
+type User struct {
+	ID          string
+	DisplayName string
+	Username    string
+	AvatarURL   string
+}
+
 func (h *handler) LoginCheck(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	query := r.URL.Query()
@@ -252,8 +266,29 @@ func (h *handler) LoginCheck(w http.ResponseWriter, r *http.Request) {
 	q.Set("state", login.State)
 	u.RawQuery = q.Encode()
 
-	w.Header().Set("HX-Redirect", u.String())
-	w.WriteHeader(http.StatusOK)
+	var user struct {
+		ID          string `json:"id"`
+		DisplayName string `json:"displayName"`
+		Username    string `json:"username"`
+		AvatarURL   string `json:"avatarUrl"`
+	}
+	if err = json.Unmarshal(*login.User, &user); err != nil {
+		slog.ErrorContext(ctx, "Failed to unmarshal login user", slog.String("err", err.Error()))
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if err = h.Templates().ExecuteTemplate(w, "login_check.gohtml", LoginCheckVars{
+		User: User{
+			ID:          user.ID,
+			DisplayName: cmp.Or(user.DisplayName, user.Username),
+			Username:    user.Username,
+			AvatarURL:   cmp.Or(user.AvatarURL, "/static/default_avatar.png"),
+		},
+		RedirectURI: u.String(),
+	}); err != nil {
+		slog.ErrorContext(ctx, "Failed to render login code template", slog.String("err", err.Error()))
+	}
 }
 
 func getChannelLink(clubID string, channelID string) string {
